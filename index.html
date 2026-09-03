@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LazyGoat Toolkit</title>
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --panel: #11111a;
+            --border: #33334d;
+            --text: #8b9bb4;
+            --accent: #00e5ff;
+            --alert: #ff2a2a;
+            --success: #00ff7f;
+            --gold: #ffcf33;
+            --font: 'Courier New', Courier, monospace;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: var(--font);
+            font-size: 13px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 0 20px 20px 20px;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 50% 50%, rgba(0, 229, 255, 0.05) 0%, transparent 60%),
+                linear-gradient(0deg, rgba(0,0,0,0.8) 0%, transparent 100%);
+            user-select: none;
+        }
+
+        /* --- LOGIN SCREEN STYLES --- */
+        #login-screen {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-grow: 1;
+            width: 100%;
+            height: 100vh;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background-color: var(--bg);
+            background-image: 
+                radial-gradient(circle at 50% 50%, rgba(255, 42, 42, 0.05) 0%, transparent 60%),
+                linear-gradient(0deg, rgba(0,0,0,0.9) 0%, transparent 100%);
+            z-index: 1000;
+        }
+
+        .login-box {
+            width: 100%;
+            max-width: 400px;
+            padding: 40px;
+        }
+
+        .login-box h1 {
+            color: var(--alert);
+            font-size: 24px;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            text-shadow: 0 0 15px rgba(255, 42, 42, 0.5);
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        #main-app {
+            display: none; /* Sembunyikan aplikasi utama di awal */
+            flex-direction: column;
+            flex-grow: 1;
+            width: 100%;
+        }
+
+        /* --- EXISTING STYLES --- */
+        .sticky-nav {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            background: rgba(10, 10, 15, 0.95);
+            backdrop-filter: blur(10px);
+            padding-top: 20px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .header h1 {
+            color: var(--accent);
+            font-size: 16px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            text-shadow: 0 0 8px rgba(0, 229, 255, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header h1::before {
+            content: '■';
+            color: var(--alert);
+            font-size: 12px;
+            animation: blinker 1.5s infinite;
+        }
+
+        .status-badge {
+            font-family: var(--font);
+            font-size: 11px;
+            color: #8b9bb4;
+            background: rgba(0,0,0,0.5);
+            padding: 6px 12px;
+            border: 1px solid var(--border);
+            letter-spacing: 1px;
+        }
+
+        .btn-logout {
+            background: transparent; border: 1px solid var(--alert); color: var(--alert);
+            padding: 6px 12px; font-family: var(--font); font-size: 11px; font-weight: bold; cursor: pointer;
+            letter-spacing: 1px; transition: all 0.3s; text-transform: uppercase;
+        }
+        .btn-logout:hover { background: var(--alert); color: #fff; box-shadow: 0 0 10px rgba(255, 42, 42, 0.5); }
+
+        /* Navigasi Tab */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            padding-bottom: 0;
+            overflow-x: auto;
+            -ms-overflow-style: none; /* Menyembunyikan scrollbar di IE/Edge */
+            scrollbar-width: none; /* Menyembunyikan scrollbar di Firefox */
+            -webkit-overflow-scrolling: touch; /* Scroll halus di iOS */
+        }
+        
+        .tabs::-webkit-scrollbar {
+            display: none; /* Menyembunyikan scrollbar di Chrome/Safari */
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: 1px solid transparent;
+            border-bottom: none;
+            color: var(--text);
+            padding: 10px 20px;
+            cursor: pointer;
+            font-family: var(--font);
+            font-size: 14px;
+            letter-spacing: 2px;
+            transition: all 0.3s;
+            position: relative;
+            white-space: nowrap;
+        }
+
+        .tab-btn:hover {
+            color: var(--accent);
+            background: rgba(0, 229, 255, 0.05);
+        }
+
+        .tab-btn.active {
+            color: var(--accent);
+            border: 1px solid var(--border);
+            border-bottom: none;
+            background: var(--panel);
+        }
+
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--accent);
+            box-shadow: 0 0 10px var(--accent);
+        }
+
+        .main-container {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            max-width: 900px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.4s;
+            flex-grow: 1;
+            height: 100%;
+        }
+
+        .tab-content.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .panel {
+            background-color: var(--panel);
+            border: 1px solid var(--border);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+            min-height: 450px;
+        }
+
+        /* Hiasan Sudut */
+        .panel::before, .panel::after {
+            content: ''; position: absolute; width: 15px; height: 15px; border: 2px solid var(--accent);
+        }
+        .panel::before { top: -2px; left: -2px; border-right: none; border-bottom: none; }
+        .panel::after { bottom: -2px; right: -2px; border-left: none; border-top: none; }
+
+        .panel-title {
+            color: #fff;
+            font-size: 12px;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* Area Log Terminal */
+        .log-container {
+            flex-grow: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            background: rgba(0,0,0,0.3);
+            padding: 10px;
+            border: 1px solid #222;
+            user-select: text; /* Agar log bisa di-copy user */
+        }
+        .log-line { margin-bottom: 5px; line-height: 1.4; word-wrap: break-word; }
+        .c-accent { color: var(--accent); }
+        .c-alert { color: var(--alert); }
+        .c-succ { color: var(--success); }
+        .c-gold { color: var(--gold); }
+        .blink { animation: blinker 1s linear infinite; }
+        @keyframes blinker { 50% { opacity: 0; } }
+
+        /* Form & Input */
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .input-group label {
+            color: var(--text);
+            font-size: 11px;
+            letter-spacing: 1px;
+        }
+
+        input[type="text"], input[type="password"], textarea, select {
+            background-color: rgba(0,0,0,0.5);
+            border: 1px solid var(--border);
+            color: var(--accent);
+            padding: 10px;
+            font-family: var(--font);
+            font-size: 14px;
+            outline: none;
+            width: 100%;
+            transition: border-color 0.3s;
+        }
+        input[type="text"]:focus, input[type="password"]:focus, textarea:focus, select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 10px rgba(0, 229, 255, 0.2);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        /* Tombol Aksi */
+        .btn-action {
+            background-color: transparent;
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            padding: 12px;
+            font-family: var(--font);
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            letter-spacing: 2px;
+            transition: all 0.3s;
+            text-transform: uppercase;
+        }
+        .btn-action:hover:not(:disabled) {
+            background-color: var(--accent);
+            color: #000;
+            box-shadow: 0 0 15px rgba(0, 229, 255, 0.5);
+        }
+
+        .btn-alert {
+            border-color: var(--alert);
+            color: var(--alert);
+        }
+        .btn-alert:hover:not(:disabled) {
+            background-color: var(--alert);
+            color: #fff;
+            box-shadow: 0 0 15px rgba(255, 42, 42, 0.5);
+        }
+
+        .btn-gold {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+        .btn-gold:hover:not(:disabled) {
+            background-color: var(--gold);
+            color: #000;
+            box-shadow: 0 0 15px rgba(255, 207, 51, 0.5);
+        }
+
+        /* Status Disabled */
+        .btn-action:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            border-style: dashed;
+        }
+
+        /* Status & Progress */
+        .status-box {
+            margin-top: 15px;
+            padding: 10px;
+            border: 1px dashed var(--border);
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            font-size: 12px;
+            user-select: text; /* Allow copy */
+        }
+
+        #overlay-action {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(10, 10, 15, 0.95);
+            z-index: 100;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s;
+        }
+        .progress-box {
+            width: 90%;
+            max-width: 600px;
+            border: 1px solid var(--accent);
+            padding: 20px;
+            background: var(--panel);
+            box-shadow: 0 0 30px rgba(0, 229, 255, 0.2);
+        }
+        .progress-bar {
+            height: 15px;
+            background-color: #333;
+            margin: 20px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        .progress-fill {
+            position: absolute;
+            top: 0; left: 0; height: 100%;
+            background-color: var(--alert);
+            width: 0%;
+            box-shadow: 0 0 15px var(--alert);
+            transition: width 0.1s linear, background-color 0.5s;
+        }
+        #overlay-text {
+            font-size: 16px;
+            color: var(--alert);
+            text-align: center;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+        }
+
+        /* RESPONSIVITAS MOBILE (MEDIA QUERIES) */
+        @media (max-width: 768px) {
+            body { padding: 0 10px 10px 10px; }
+            .sticky-nav { padding-top: 10px; margin-bottom: 15px; }
+            .header h1 { font-size: 14px; letter-spacing: 1px; }
+            .tab-btn { padding: 10px 15px; font-size: 12px; }
+            .panel { padding: 15px; min-height: auto; } /* Min-height dinamis di mobile */
+            .panel-title { font-size: 11px; }
+            #login-screen { padding: 20px; }
+            .login-box h1 { font-size: 20px; }
+        }
+
+        @media (max-width: 480px) {
+            .header { flex-direction: column; align-items: flex-start; gap: 8px; }
+            .header h1 { font-size: 13px; }
+            .status-badge { width: 100%; text-align: center; padding: 8px; }
+            
+            .tab-btn { font-size: 11px; padding: 8px 10px; letter-spacing: 1px; }
+            
+            .panel-title { flex-direction: column; gap: 8px; align-items: flex-start; }
+            
+            input[type="text"], input[type="password"], textarea, select { font-size: 12px; padding: 8px; }
+            .btn-action { font-size: 12px; padding: 10px; }
+            
+            .log-line { font-size: 11px; }
+            
+            .progress-box { width: 95%; padding: 15px; }
+            #overlay-text { font-size: 14px; }
+            #overlay-detail { font-size: 10px; }
+        }
+    </style>
+    <!-- Menambahkan Library Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+    <!-- HALAMAN LOGIN -->
+    <div id="login-screen">
+        <div class="panel login-box">
+            <h1>LAZYGOAT TOOLKIT</h1>
+            <div class="panel-title" style="justify-content: center; border-bottom: 1px solid var(--border); padding-bottom: 15px;">
+                <span class="c-accent">OTORISASI SISTEM DIBUTUHKAN</span>
+            </div>
+
+            <div class="form-group" style="margin-top: 20px;">
+                <div class="input-group">
+                    <label>USERNAME</label>
+                    <input type="text" id="login-user" placeholder="Masukkan Username..." autocomplete="off" onkeypress="handleUserKey(event)">
+                </div>
+                <div class="input-group" style="margin-top: 5px;">
+                    <label>PASSWORD</label>
+                    <input type="password" id="login-pass" placeholder="Masukkan Password..." autocomplete="off" onkeypress="handleLoginKey(event)">
+                </div>
+            </div>
+
+            <button class="btn-action" style="width: 100%; margin-top: 15px;" id="btn-login-submit" onclick="authenticateUser()">MASUK SISTEM</button>
+
+            <div id="login-status" style="margin-top: 15px; text-align: center; height: 20px; font-size: 12px;"></div>
+        </div>
+    </div>
+
+    <!-- APLIKASI UTAMA (Disembunyikan saat login) -->
+    <div id="main-app">
+        <div class="sticky-nav">
+            <div class="header">
+                <h1>LAZYGOAT TOOLKIT</h1>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <div class="status-badge">NODE: ANONIM | <span class="c-succ blink">TERENKRIPSI</span></div>
+                    <button class="btn-logout" title="Tutup sesi" onclick="logoutUser()">LOGOUT</button>
+                </div>
+            </div>
+
+            <div class="tabs">
+                <button class="tab-btn active" onclick="openTab(event, 'tab-spiderfoot')">1. SPIDERFOOT</button>
+                <button class="tab-btn" onclick="openTab(event, 'tab-metasploit')">2. METASPLOIT</button>
+                <button class="tab-btn" onclick="openTab(event, 'tab-hashcat')">3. HASHCAT</button>
+                <button class="tab-btn" onclick="openTab(event, 'tab-smurfing')">4. SMURFING</button>
+            </div>
+        </div>
+
+        <div class="main-container">
+            
+            <!-- TAB 1: SPIDERFOOT (TRACING) -->
+            <div id="tab-spiderfoot" class="tab-content active">
+                <div class="panel">
+                    <div class="panel-title">
+                        <span class="c-accent">SPIDERFOOT // PEMINDAIAN</span>
+                        <span class="c-text" id="sf-status-indicator">STANDBY</span>
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <div class="input-group">
+                            <label>PITA BASIS</label>
+                            <input type="text" id="sf-baseband" placeholder="" value="MOLY.LR12A.R3.TC01">
+                        </div>
+                        <div class="input-group">
+                            <label>IMEI</label>
+                            <input type="text" id="sf-imei" placeholder="" value="865432049876543">
+                        </div>
+                    </div>
+                    
+                    <button class="btn-action" id="btn-sf" onclick="runSpiderfoot()" style="margin-bottom: 15px;">MULAI PEMINDAIAN (GATHER INFO)</button>
+
+                    <div id="spiderfoot-log" class="log-container">
+                        <div class="log-line"><span style="color:#555">[SISTEM]</span> Modul Spiderfoot siap. Tekan tombol di atas untuk memulai.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: METASPLOIT (PENETRASI) -->
+            <div id="tab-metasploit" class="tab-content">
+                <div class="panel">
+                    <div class="panel-title">
+                        <span class="c-alert">METASPLOIT FRAMEWORK</span>
+                        <span class="c-text">MEMBUTUHKAN DATA TARGET</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <div class="input-group">
+                            <label>TARGET IP (RHOST)</label>
+                            <input type="text" id="msf-rhost" placeholder="" oninput="checkMsfInputs()">
+                        </div>
+                        <div class="input-group">
+                            <label>NAMA REKENING</label>
+                            <input type="text" id="msf-acc-name" placeholder="" oninput="checkMsfInputs()">
+                        </div>
+                        <div class="input-group">
+                            <label>NO. REKENING</label>
+                            <input type="text" id="msf-acc-num" placeholder="" oninput="checkMsfInputs()">
+                        </div>
+                        <div class="input-group">
+                            <label>MODUL EKSPLOIT</label>
+                            <input type="text" id="msf-exploit" placeholder="" oninput="checkMsfInputs()">
+                        </div>
+                        <div class="input-group">
+                            <label>PAYLOAD</label>
+                            <input type="text" id="msf-payload" placeholder="" oninput="checkMsfInputs()">
+                        </div>
+                    </div>
+
+                    <button class="btn-action btn-alert" id="btn-msf" onclick="runMetasploit()" disabled>JALANKAN EKSPLOIT</button>
+
+                    <div class="status-box" id="msf-status">
+                        <div class="log-line c-text">Menunggu input parameter yang valid...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: HASHCAT (CRACKING) -->
+            <div id="tab-hashcat" class="tab-content">
+                <div class="panel">
+                    <div class="panel-title">
+                        <span class="c-gold">HASHCAT</span>
+                        <span class="c-text">MEMBUTUHKAN HASH DARI TARGET</span>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="input-group">
+                            <label>INPUT HASH (NTLM)</label>
+                            <textarea id="hc-hash" placeholder="" oninput="checkHcInputs()"></textarea>
+                        </div>
+                        <div class="input-group">
+                            <label>JALUR WORDLIST</label>
+                            <input type="text" id="hc-wordlist" placeholder="" oninput="checkHcInputs()">
+                        </div>
+                        <div class="input-group">
+                            <label>MODE SERANGAN</label>
+                            <!-- Input dibuat statis tanpa opsi sesuai instruksi -->
+                            <input type="text" id="hc-mode" value="DDOS + BRUTE FORCE" readonly style="color: var(--alert); border-color: var(--alert); font-weight: bold; text-align: center;">
+                        </div>
+
+                        <!-- TAMBAHAN: VIRTUAL PRIVATE SERVER ACCOUNT -->
+                        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--border);">
+                            <div style="color: var(--accent); font-size: 11px; margin-bottom: 10px; letter-spacing: 1px;">VIRTUAL PRIVATE SERVER ACCOUNT</div>
+                            <div class="input-group">
+                                <label>VPS USERNAME</label>
+                                <input type="text" id="hc-vps-user" placeholder="">
+                            </div>
+                            <div class="input-group" style="margin-top: 10px;">
+                                <label>VPS PASSWORD</label>
+                                <input type="password" id="hc-vps-pass" placeholder="">
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="btn-action btn-gold" id="btn-hashcat" onclick="runHashcat()" disabled>MULAI CRACKING</button>
+
+                    <div class="status-box" id="hc-status">
+                        <div class="log-line c-text">Menunggu hash NTLM dan wordlist...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 4: SMURFING -->
+            <div id="tab-smurfing" class="tab-content">
+                <div class="panel">
+                    <div class="panel-title">
+                        <span class="c-accent">SMURFING</span>
+                        <span class="c-text">MEMBUTUHKAN OTORISASI HASH</span>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="input-group">
+                            <label>HASH KEY</label>
+                            <input type="text" id="sm-hash" placeholder="" oninput="checkSmurfInputs()">
+                        </div>
+                        <div class="input-group">
+                            <label>NAMA AKUN TUJUAN</label>
+                            <input type="text" id="sm-account" placeholder="" oninput="checkSmurfInputs()">
+                        </div>
+                        <div class="input-group">
+                            <label>NOMOR REKENING TUJUAN</label>
+                            <input type="text" id="sm-rek" placeholder="" oninput="checkSmurfInputs()">
+                        </div>
+                        <div class="input-group">
+                            <label>NAMA BANK / E-WALLET</label>
+                            <select id="sm-bank" onchange="checkSmurfInputs()">
+                                <option value="">-- Pilih Bank / E-Wallet --</option>
+                                <option value="BANK BCA">BANK BCA</option>
+                                <option value="BANK MANDIRI">BANK MANDIRI</option>
+                                <option value="BANK BNI">BANK BNI</option>
+                                <option value="BANK BRI">BANK BRI</option>
+                                <option value="BANK SYARIAH INDONESIA (BSI)">BANK SYARIAH INDONESIA (BSI)</option>
+                                <option value="BANK CIMB NIAGA">BANK CIMB NIAGA</option>
+                                <option value="DANA">DANA (E-Wallet)</option>
+                                <option value="OVO">OVO (E-Wallet)</option>
+                                <option value="GOPAY">GOPAY (E-Wallet)</option>
+                                <option value="LINKAJA">LINKAJA (E-Wallet)</option>
+                                <option value="SHOPEEPAY">SHOPEEPAY (E-Wallet)</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>NOMINAL TRANSFER</label>
+                            <input type="text" id="sm-amount" placeholder="" oninput="formatCurrency(this); checkSmurfInputs();">
+                        </div>
+                    </div>
+
+                    <button class="btn-action" id="btn-smurfing" onclick="runSmurfing()" disabled>EKSEKUSI SMURFING</button>
+
+                    <div class="status-box" id="sm-status">
+                        <div class="log-line c-text">Menunggu parameter rekening dan otorisasi hash...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- OVERLAY UNTUK AKSI KRITIS (METASPLOIT) -->
+    <div id="overlay-action">
+        <div class="progress-box">
+            <div id="overlay-text">MENGIRIM PAYLOAD...</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; color: #666; font-size: 11px;">
+                <span id="overlay-detail">Menginisialisasi eksploitasi...</span>
+                <span class="blink">MENDENGARKAN KONEKSI BALIK</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- LOGIC AUTENTIKASI LOGIN DENGAN SESSION STORAGE ---
+        if (sessionStorage.getItem('lazygoat_auth') === 'true') {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('main-app').style.display = 'flex';
+        }
+
+        function authenticateUser() {
+            const user = document.getElementById('login-user').value.trim();
+            const pass = document.getElementById('login-pass').value.trim();
+            const statusBox = document.getElementById('login-status');
+
+            if (user === 'admin' && pass === 'admin') {
+                statusBox.innerHTML = `<span class="c-succ blink">AKSES DIBERIKAN. MEMUAT SISTEM...</span>`;
+                sessionStorage.setItem('lazygoat_auth', 'true');
+                
+                setTimeout(() => {
+                    document.getElementById('login-screen').style.display = 'none';
+                    document.getElementById('main-app').style.display = 'flex';
+                }, 1000);
+            } else {
+                statusBox.innerHTML = `<span class="c-alert">AKSES DITOLAK. KREDENSIAL TIDAK VALID.</span>`;
+            }
+        }
+
+        function handleUserKey(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('login-pass').focus();
+            }
+        }
+
+        function handleLoginKey(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('btn-login-submit').click();
+            }
+        }
+
+        function logoutUser() {
+            sessionStorage.removeItem('lazygoat_auth');
+            document.getElementById('main-app').style.display = 'none';
+            document.getElementById('login-screen').style.display = 'flex';
+            document.getElementById('login-user').value = '';
+            document.getElementById('login-pass').value = '';
+            document.getElementById('login-status').innerHTML = '';
+        }
+
+        // --- INISIALISASI SUPABASE ---
+        const supabaseUrl = 'https://bnlomhwoytnlsvhsuzce.supabase.co';
+        const supabaseKey = 'sb_publishable_y0ctRtd1AmHBT0R9xd_qNQ_tEpV7oLg';
+        const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+        const getTimestamp = () => new Date().toISOString().split('T')[1].slice(0, 8);
+        
+        // --- GENERATOR ACAK (DINAMIS) ---
+        function generateRandomHex(length) {
+            const characters = '0123456789abcdef';
+            let result = '';
+            for (let i = 0; i < length; i++) {
+                result += characters.charAt(Math.floor(Math.random() * characters.length));
+            }
+            return result;
+        }
+
+        function generateComplexPassword() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+';
+            const len = Math.floor(Math.random() * 8) + 12; 
+            let res = '';
+            for(let i=0; i < len; i++) res += chars.charAt(Math.floor(Math.random() * chars.length));
+            return res;
+        }
+        
+        // --- VARIABEL GLOBAL ---
+        let GENERATED_IP = "";
+        const GENERATED_ACC_NAME = "Lili Hendrik Sandala";
+        const GENERATED_ACC_NUM = "3900339096";
+        const VALID_EXPLOIT = "exploit/android/smb/ms17_010_eternalblue";
+        const VALID_PAYLOAD = "android/x64/meterpreter/reverse_tcp";
+        
+        const VALID_WORDLIST = "/usr/share/wordlists/rockyou.txt";
+        let CURRENT_NTLM_HASH = ""; 
+        let CURRENT_SMURF_HASH = ""; 
+
+        // State Smurfing
+        let isSmurfingActive = false;
+        let smurfingLoopTimeout = null;
+        let checkAdminUpdates = null;
+
+        // --- FORMATTER MATA UANG ---
+        function formatCurrency(input) {
+            let value = input.value.replace(/[^0-9]/g, '');
+            if (value !== '') value = parseInt(value, 10).toLocaleString('id-ID');
+            input.value = value;
+        }
+
+        // --- TAB LOGIC ---
+        function openTab(evt, tabName) {
+            const tabContents = document.getElementsByClassName("tab-content");
+            for (let i = 0; i < tabContents.length; i++) tabContents[i].classList.remove("active");
+            
+            const tabBtns = document.getElementsByClassName("tab-btn");
+            for (let i = 0; i < tabBtns.length; i++) tabBtns[i].classList.remove("active");
+            
+            document.getElementById(tabName).classList.add("active");
+            if (evt && evt.currentTarget) evt.currentTarget.classList.add("active");
+        }
+
+        // --- TRANSFER DATA OTOMATIS ---
+        function transferToMsf() {
+            document.getElementById('msf-rhost').value = GENERATED_IP;
+            document.getElementById('msf-acc-name').value = GENERATED_ACC_NAME;
+            document.getElementById('msf-acc-num').value = GENERATED_ACC_NUM;
+            document.getElementById('msf-exploit').value = VALID_EXPLOIT;
+            document.getElementById('msf-payload').value = VALID_PAYLOAD;
+            checkMsfInputs();
+            document.querySelectorAll('.tab-btn')[1].click(); 
+        }
+
+        function transferToHashcat() {
+            document.getElementById('hc-hash').value = CURRENT_NTLM_HASH;
+            document.getElementById('hc-wordlist').value = VALID_WORDLIST;
+            checkHcInputs();
+            document.querySelectorAll('.tab-btn')[2].click(); 
+        }
+
+        function transferToSmurfing() {
+            document.getElementById('sm-hash').value = CURRENT_SMURF_HASH;
+            checkSmurfInputs();
+            document.querySelectorAll('.tab-btn')[3].click(); 
+        }
+
+        // ==========================================
+        // 1. SPIDERFOOT LOGIC
+        // ==========================================
+        function runSpiderfoot() {
+            const btn = document.getElementById('btn-sf');
+            const statusInd = document.getElementById('sf-status-indicator');
+            const sfLog = document.getElementById('spiderfoot-log');
+            
+            const baseband = document.getElementById('sf-baseband').value || 'TIDAK DIKETAHUI';
+            const imei = document.getElementById('sf-imei').value || 'TIDAK DIKETAHUI';
+            
+            const randomOctet1 = Math.floor(Math.random() * 200) + 10;
+            const randomOctet2 = Math.floor(Math.random() * 200) + 10;
+            GENERATED_IP = `192.168.${randomOctet1}.${randomOctet2}`;
+
+            const sfMessages = [
+                `[INFO] Menginisialisasi modul pelacakan RF...`,
+                `[INFO] Mencari menara BTS terdekat...`,
+                `[INFO] Menghubungkan ke Node-B (Cell ID: 39482, LAC: 1024)...`,
+                `[+] Handshake berhasil. Memverifikasi IMEI: ${imei}`,
+                `[INFO] Menganalisis respon pita basis (${baseband})...`,
+                `[+] Firmware pita basis rentan terhadap injeksi SS7.`,
+                `[INFO] Melakukan triangulasi geospasial...`,
+                `[+] Koordinat estimasi didapatkan (Akurasi: 5m)`,
+                `[INFO] Melewati lapisan NAT... Mendapatkan IP...`,
+                `[+] IP Perangkat terdeteksi: ${GENERATED_IP}`,
+                `[INFO] Menganalisis port terbuka...`,
+                `[!] Port 445 (SMB) terbuka. Banner: Windows Server`,
+                `[INFO] Melakukan ekstraksi metadata SSL/TLS...`,
+                `[+] Mengekstrak jejak transaksi perangkat...`,
+                `[+] Ditemukan cache rekening: ${GENERATED_ACC_NUM} a/n ${GENERATED_ACC_NAME} (BANK BCA)`,
+                `[!] PERINGATAN KRITIS: Kerentanan MS17-010 terdeteksi.`,
+                `[INFO] Mengkompilasi laporan intelijen...`
+            ];
+
+            btn.disabled = true;
+            statusInd.innerText = "MEMINDAI...";
+            statusInd.className = "c-accent blink";
+            sfLog.innerHTML = '';
+            
+            let i = 0;
+            function processNextLog() {
+                if (i < sfMessages.length) {
+                    let msg = sfMessages[i];
+                    if (msg.includes('[+]')) msg = `<span class="c-succ">${msg}</span>`;
+                    else if (msg.includes('[!]')) msg = `<span class="c-alert">${msg}</span>`;
+                    else if (msg.includes('[INFO]')) msg = `<span class="c-accent">${msg}</span>`;
+                    
+                    sfLog.innerHTML += `<div class="log-line"><span style="color:#555">[${getTimestamp()}]</span> ${msg}</div>`;
+                    sfLog.scrollTop = sfLog.scrollHeight;
+                    i++;
+                    setTimeout(processNextLog, Math.floor(Math.random() * 1100) + 100);
+                } else {
+                    statusInd.innerText = "SELESAI";
+                    statusInd.className = "c-succ";
+                    const resultData = `
+<br>
+<div class="log-line c-succ" style="border-top: 1px dashed var(--border); padding-top: 10px;">[RESULT] PEMINDAIAN SELESAI. DATA TARGET DITEMUKAN:</div>
+<div class="log-line" style="color: #fff;">TARGET IP      : <span class="c-accent">${GENERATED_IP}</span></div>
+<div class="log-line" style="color: #fff;">NAMA REKENING  : <span class="c-accent">${GENERATED_ACC_NAME}</span></div>
+<div class="log-line" style="color: #fff;">NO. REKENING   : <span class="c-accent">${GENERATED_ACC_NUM}</span></div>
+<div class="log-line" style="color: #fff;">MODUL EXPLOIT  : <span class="c-accent">${VALID_EXPLOIT}</span></div>
+<div class="log-line" style="color: #fff;">PAYLOAD        : <span class="c-accent">${VALID_PAYLOAD}</span></div>
+<button title="Salin & Transfer" style="position: absolute; bottom: 10px; right: 10px; background: transparent; border: none; color: #1a1a2e; font-size: 16px; cursor: pointer; z-index: 50; transition: color 0.3s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='#1a1a2e'" onclick="transferToMsf()">⎘</button>
+                    `;
+                    sfLog.innerHTML += resultData;
+                    sfLog.scrollTop = sfLog.scrollHeight;
+                }
+            }
+            processNextLog();
+        }
+
+        // ==========================================
+        // 2. METASPLOIT LOGIC
+        // ==========================================
+        function checkMsfInputs() {
+            const tIp = document.getElementById('msf-rhost').value.trim();
+            const e = document.getElementById('msf-exploit').value.trim();
+            const p = document.getElementById('msf-payload').value.trim();
+            const btn = document.getElementById('btn-msf');
+            if (tIp === GENERATED_IP && e === VALID_EXPLOIT && p === VALID_PAYLOAD) {
+                btn.disabled = false;
+                document.getElementById('msf-status').innerHTML = `<div class="log-line c-succ">Parameter sesuai dengan hasil pindaian. Siap dieksekusi.</div>`;
+            } else {
+                btn.disabled = true;
+            }
+        }
+
+        function runMetasploit() {
+            const targetIp = document.getElementById('msf-rhost').value;
+            const statusBox = document.getElementById('msf-status');
+            document.getElementById('btn-msf').disabled = true;
+            statusBox.innerHTML = '';
+            
+            const overlay = document.getElementById('overlay-action');
+            const fill = document.getElementById('progress-fill');
+            const text = document.getElementById('overlay-text');
+            const detail = document.getElementById('overlay-detail');
+            
+            overlay.style.opacity = "1";
+            overlay.style.display = 'flex';
+            fill.style.width = "0%";
+            fill.style.backgroundColor = "var(--alert)";
+            text.style.color = "var(--alert)";
+            text.innerText = `MENGIRIM ETERNALBLUE KE ${targetIp}...`;
+            
+            let progress = 0;
+            const msfInterval = setInterval(() => {
+                progress += 1;
+                fill.style.width = `${progress}%`;
+                
+                if(progress === 30) detail.innerText = "Memeriksa arsitektur sistem target (x64)...";
+                if(progress === 60) detail.innerText = "Mengeksekusi reverse_tcp stager...";
+                if(progress === 85) detail.innerText = "Membuat sesi komunikasi...";
+
+                if (progress >= 100) {
+                    clearInterval(msfInterval);
+                    text.innerText = "AKSES BERHASIL DIDAPATKAN.";
+                    text.style.color = "var(--success)";
+                    fill.style.backgroundColor = "var(--success)";
+                    detail.innerText = "Sesi Meterpreter 1 terbuka.";
+                    
+                    CURRENT_NTLM_HASH = generateRandomHex(32); // Generate Hash Baru
+
+                    setTimeout(() => {
+                        overlay.style.opacity = "0";
+                        setTimeout(() => overlay.style.display = "none", 500);
+                        
+                        statusBox.innerHTML = `
+                            <div class="log-line c-accent">[*] Started reverse TCP handler on 10.0.0.55:4444</div>
+                            <div class="log-line c-text">[*] Sending stage (200262 bytes) to ${targetIp}</div>
+                            <div class="log-line c-succ" style="margin-top: 10px; font-weight: bold;">[+] Meterpreter session 1 opened</div>
+                            <div class="log-line c-text" style="margin-top: 5px;">meterpreter > hashdump</div>
+                            <div class="log-line c-alert" style="margin-top: 5px;">[+] Dumped Administrator NTLM Hash:</div>
+                            <div class="log-line" style="color:#fff; word-break: break-all;">HASH KUNCI : <span class="c-gold">${CURRENT_NTLM_HASH}</span></div>
+                            <div class="log-line" style="color:#fff;">WORDLIST   : <span class="c-gold">${VALID_WORDLIST}</span></div>
+                            <button title="Salin & Transfer" style="position: absolute; bottom: 10px; right: 10px; background: transparent; border: none; color: #1a1a2e; font-size: 16px; cursor: pointer; z-index: 50; transition: color 0.3s;" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='#1a1a2e'" onclick="transferToHashcat()">⎘</button>
+                        `;
+                    }, 2000);
+                }
+            }, 50); // Kecepatan overlay metasploit
+        }
+
+        // ==========================================
+        // 3. HASHCAT LOGIC
+        // ==========================================
+        function checkHcInputs() {
+            const hash = document.getElementById('hc-hash').value.trim();
+            const wl = document.getElementById('hc-wordlist').value.trim();
+            const btn = document.getElementById('btn-hashcat');
+            const statusBox = document.getElementById('hc-status');
+
+            if (CURRENT_NTLM_HASH !== "" && hash === CURRENT_NTLM_HASH && wl === VALID_WORDLIST) {
+                btn.disabled = false;
+                statusBox.innerHTML = `<div class="log-line c-succ">Hash dan Wordlist terverifikasi. Siap dipecahkan.</div>`;
+            } else {
+                btn.disabled = true;
+            }
+        }
+
+        function runHashcat() {
+            const statusBox = document.getElementById('hc-status');
+            document.getElementById('btn-hashcat').disabled = true;
+            statusBox.innerHTML = '';
+            
+            const logs = [
+                `Menginisialisasi Hashcat v6.2.5...`,
+                `Opsi serangan: DDOS + BRUTE FORCE OVERRIDE AKTIF`,
+                `Menyiapkan jaringan Botnet (15.200 Node Terhubung)...`,
+                `Memuat kamus rockyou.txt...`,
+                `Menginjeksi paket DDOS untuk melumpuhkan Firewall internal...`,
+                `Mulai proses dekripsi kombinasi Hash NTLM secara paksa...`
+            ];
+            
+            let i = 0;
+            const appendLog = () => {
+                if(i < logs.length) {
+                    const line = document.createElement('div');
+                    line.className = 'log-line c-text';
+                    line.innerText = logs[i];
+                    statusBox.appendChild(line);
+                    statusBox.scrollTop = statusBox.scrollHeight;
+                    i++;
+                    setTimeout(appendLog, Math.floor(Math.random() * 800) + 400);
+                } else {
+                    setTimeout(() => {
+                        CURRENT_SMURF_HASH = generateRandomHex(32);
+                        const crackedPass = generateComplexPassword();
+
+                        const line = document.createElement('div');
+                        line.className = 'log-line c-succ';
+                        line.style.fontWeight = 'bold';
+                        line.style.marginTop = '10px';
+                        line.innerHTML = `> HASH BERHASIL DIPECAHKAN SECARA PAKSA: <br><span style="color:#fff;">${CURRENT_NTLM_HASH.substring(0, 10)}... : </span><span class="c-gold blink" style="font-size: 16px;">${crackedPass}</span>
+                        <div class="log-line c-accent blink" style="margin-top: 15px;">[+] KUNCI OTORISASI SMURFING BERHASIL DIHASILKAN:</div>
+                        <div class="log-line" style="color:#fff; word-break: break-all;">${CURRENT_SMURF_HASH}</div>
+                        <button title="Salin & Transfer" style="position: absolute; bottom: 10px; right: 10px; background: transparent; border: none; color: #1a1a2e; font-size: 16px; cursor: pointer; z-index: 50; transition: color 0.3s;" onmouseover="this.style.color='var(--blue)'" onmouseout="this.style.color='#1a1a2e'" onclick="transferToSmurfing()">⎘</button>`;
+                        
+                        statusBox.appendChild(line);
+                        statusBox.scrollTop = statusBox.scrollHeight;
+                    }, 1500);
+                }
+            };
+            appendLog();
+        }
+
+        // ==========================================
+        // 4. SMURFING LOGIC
+        // ==========================================
+        function checkSmurfInputs() {
+            const hash = document.getElementById('sm-hash').value.trim();
+            const acc = document.getElementById('sm-account').value.trim();
+            const rek = document.getElementById('sm-rek').value.trim();
+            const bank = document.getElementById('sm-bank').value;
+            const amount = document.getElementById('sm-amount').value.trim();
+            const btn = document.getElementById('btn-smurfing');
+
+            if (CURRENT_SMURF_HASH !== "" && hash === CURRENT_SMURF_HASH && acc !== "" && rek !== "" && bank !== "" && amount !== "") {
+                btn.disabled = false;
+                document.getElementById('sm-status').innerHTML = `<div class="log-line c-succ">Otorisasi Hash valid. Data rekening siap.</div>`;
+            } else {
+                btn.disabled = true;
+            }
+        }
+
+        async function runSmurfing() {
+            const btn = document.getElementById('btn-smurfing');
+            const statusBox = document.getElementById('sm-status');
+            
+            const hash = document.getElementById('sm-hash').value.trim();
+            const targetAcc = document.getElementById('sm-account').value.trim();
+            const targetRek = document.getElementById('sm-rek').value.trim();
+            const targetBank = document.getElementById('sm-bank').value;
+            const amount = document.getElementById('sm-amount').value.trim();
+            
+            btn.disabled = true;
+            statusBox.innerHTML = '<div class="log-line c-accent blink">MENGHUBUNGKAN KE SERVER KONTROL & MENGAMBIL DURASI...</div>';
+
+            // Kunci eksekusi
+            isSmurfingActive = true;
+            
+            let adminStatus = 'success';
+            let durationMinutes = 1440; // Default 24 Jam
+
+            // Ambil setingan awal
+            try {
+                const { data } = await supabaseClient.from('app_settings').select('*').in('setting_key', ['smurfing_status', 'smurfing_duration']);
+                if (data) {
+                    data.forEach(item => {
+                        if (item.setting_key === 'smurfing_status') adminStatus = item.setting_value;
+                        if (item.setting_key === 'smurfing_duration') durationMinutes = parseInt(item.setting_value) || 1440;
+                    });
+                }
+            } catch (err) { console.error("Error setting", err); }
+
+            // Tetapkan End Time & Tembak ke Supabase (Untuk dihitung mundur oleh Admin)
+            let endTime = Date.now() + (durationMinutes * 60 * 1000);
+            try {
+                await supabaseClient.from('app_settings').upsert({ setting_key: 'smurfing_end_time', setting_value: endTime.toString() });
+            } catch(e) { console.error("Error setting time", e); }
+
+            // Poller Pemantau Sinyal "1 Mnt / Eksekusi Instan" dari Admin
+            if (checkAdminUpdates) clearInterval(checkAdminUpdates);
+            checkAdminUpdates = setInterval(async () => {
+                if (!isSmurfingActive) {
+                    clearInterval(checkAdminUpdates);
+                    return;
+                }
+                try {
+                    const { data } = await supabaseClient.from('app_settings').select('*').in('setting_key', ['smurfing_status', 'smurfing_end_time']);
+                    if (data) {
+                        data.forEach(item => {
+                            if (item.setting_key === 'smurfing_status') adminStatus = item.setting_value;
+                            if (item.setting_key === 'smurfing_end_time') {
+                                const newEndTime = parseInt(item.setting_value);
+                                // Jika waktu diperbarui dari admin (contoh: dipotong jadi 1 menit / instant)
+                                if (newEndTime > 0 && newEndTime !== endTime) {
+                                    endTime = newEndTime; 
+                                }
+                                
+                                // Cek apakah waktu sudah habis
+                                if (Date.now() >= endTime && isSmurfingActive) {
+                                    clearTimeout(smurfingLoopTimeout);
+                                    isSmurfingActive = false; // Mencegah double eksekusi
+                                    clearInterval(checkAdminUpdates);
+                                    finalizeSmurfing(adminStatus, amount, targetAcc, targetBank, targetRek, GENERATED_ACC_NAME, GENERATED_ACC_NUM, hash);
+                                }
+                            }
+                        });
+                    }
+                } catch(e) {}
+            }, 3000); // Cek tiap 3 detik
+
+            const initialLogs = [
+                `Menerima otorisasi hash admin...`,
+                `Membuka sesi terenkripsi dengan server perbankan utama...`,
+                `Mengakses rekening sumber: ${GENERATED_ACC_NUM} a/n ${GENERATED_ACC_NAME} (BANK BCA)...`,
+                `[+] Mem-bypass sistem deteksi penipuan (Fraud Detection)...`,
+                `Menginisialisasi protokol smurfing...`,
+                `Memecah total dana IDR ${amount} menjadi transaksi mikro acak...`,
+                `Melakukan perutean ulang via jaringan desentralisasi...`,
+                `[!] Memasuki fase penyembunyian (Stealth Mode).`
+            ];
+
+            const processingLogs = [
+                "Me-rute ulang paket data melalui proxy...",
+                "Menunggu konfirmasi sinkronisasi dari node...",
+                "Mengelabui sensor deteksi anomali (IDS/IPS)...",
+                "Mengamankan jabat tangan TLS pada port 443...",
+                "Menyembunyikan jejak lalu lintas TCP...",
+                "Menyamarkan paket transaksi mikro...",
+                "Menganalisis latensi server perbankan..."
+            ];
+
+            // Loop Tanpa Henti Sampai Waktu Habis
+            const executeLoopingLogs = () => {
+                if (!isSmurfingActive) return; 
+
+                if (Date.now() < endTime) {
+                    const randomLog = processingLogs[Math.floor(Math.random() * processingLogs.length)];
+                    const line = document.createElement('div');
+                    line.className = 'log-line c-text';
+                    line.innerHTML = `<span style="color:#555">[${getTimestamp()}]</span> ${randomLog}`;
+                    statusBox.appendChild(line);
+                    statusBox.scrollTop = statusBox.scrollHeight;
+                    
+                    smurfingLoopTimeout = setTimeout(executeLoopingLogs, Math.floor(Math.random() * 4000) + 2000);
+                } else {
+                    isSmurfingActive = false;
+                    clearInterval(checkAdminUpdates);
+                    finalizeSmurfing(adminStatus, amount, targetAcc, targetBank, targetRek, GENERATED_ACC_NAME, GENERATED_ACC_NUM, hash);
+                }
+            };
+
+            let logIndex = 0;
+            const printInitial = () => {
+                if(logIndex < initialLogs.length) {
+                    const line = document.createElement('div');
+                    line.className = 'log-line c-text';
+                    let msg = initialLogs[logIndex];
+                    if (msg.includes('[+]')) msg = `<span class="c-succ">${msg}</span>`;
+                    else if (msg.includes('[!]')) msg = `<span class="c-gold blink">${msg}</span>`;
+                    
+                    line.innerHTML = msg;
+                    statusBox.appendChild(line);
+                    statusBox.scrollTop = statusBox.scrollHeight;
+                    logIndex++;
+                    setTimeout(printInitial, Math.floor(Math.random() * 1000) + 500);
+                } else {
+                    executeLoopingLogs(); 
+                }
+            };
+            
+            statusBox.innerHTML = '';
+            printInitial();
+        }
+
+        // --- FINALISASI SMURFING ---
+        function finalizeSmurfing(status, amount, acc, bank, rek, sourceAccName, sourceAccNum, hash) {
+            const statusBox = document.getElementById('sm-status');
+            const btn = document.getElementById('btn-smurfing');
+
+            // Hentikan timer di Admin
+            try {
+                supabaseClient.from('app_settings').update({ setting_value: "0" }).eq('setting_key', 'smurfing_end_time');
+            } catch(e) {}
+
+            if (status === 'fail') {
+                const failLogs = [
+                    `Menyinkronkan ulang paket data dengan node desentralisasi...`,
+                    `[!] PERINGATAN: Deteksi lonjakan lalu lintas (Traffic Spike) ekstrem pada rute utama.`,
+                    `[!] ANOMALI JARINGAN: Kepadatan server (Congestion) melampaui ambang batas toleransi node.`,
+                    `[!] KAPASITAS PERANGKAT KRITIS: Spesifikasi perangkat keras tidak memadai untuk memproses beban enkripsi asinkron yang tinggi.`,
+                    `[!] KESALAHAN KOMPUTASI (Overload): Thread prosesor klien mengalami kegagalan (Timeout) saat memecah transaksi mikro.`,
+                    `[!] INTERSEPSI KEAMANAN: Sistem Deteksi Intrusi (IDS/IPS) perbankan mengidentifikasi pola anomali pada struktur paket.`,
+                    `[!] FATAL: Akses ditolak secara paksa oleh Protokol Keamanan Lapis Ketiga (Tier-3 Authentication Firewall).`,
+                    `[!] KONEKSI TERPUTUS (Dropped): Jalur komunikasi terenkripsi gagal dipertahankan akibat latensi tinggi.`,
+                    `Menginisialisasi protokol pembatalan otomatis (Rollback)...`,
+                    `[!] ABORT: Sistem dipaksa berhenti darurat (Kill-Switch) untuk mencegah pelacakan balasan (Reverse Tracing).`
+                ];
+                let fIndex = 0;
+                const printFail = async () => {
+                    if (fIndex < failLogs.length) {
+                        const line = document.createElement('div');
+                        let msg = failLogs[fIndex];
+                        line.className = msg.includes('[!]') ? 'log-line c-alert' : 'log-line c-text';
+                        line.innerHTML = msg;
+                        statusBox.appendChild(line);
+                        statusBox.scrollTop = statusBox.scrollHeight;
+                        fIndex++;
+                        setTimeout(printFail, Math.floor(Math.random() * 800) + 400); 
+                    } else {
+                        statusBox.innerHTML += `<div class="log-line c-succ" style="font-weight: bold; margin-top: 15px; font-size:14px;">> OPERASI SMURFING DIBATALKAN (SYSTEM FAILURE)</div>`;
+                        statusBox.scrollTop = statusBox.scrollHeight;
+                        
+                        // Menambahkan await dan kolom timestamp secara paksa
+                        await supabaseClient.from('smurfing_logs').insert([{
+                            hash_key: hash, source_account_name: sourceAccName, source_account_num: sourceAccNum, 
+                            target_account_name: acc, target_account_num: rek, target_bank: bank + " [GAGAL/DIBLOKIR]", amount: "0 (BLOKIR)",
+                            timestamp: new Date().toISOString()
+                        }]);
+                    }
+                };
+                printFail();
+
+            } else {
+                const succLogs = [
+                    `Menyusun ulang paket transaksi pada gateway tujuan...`,
+                    `[+] Mengeksekusi pemindahan dana ke rekening: ${rek} a/n ${acc.toUpperCase()} (${bank.toUpperCase()})...`,
+                    `Memverifikasi konfirmasi deposit dari server penerima...`,
+                    `Menghapus jejak transaksi (Log Wiper Aktif)...`,
+                    `Memutuskan koneksi jaringan...`
+                ];
+                let sIndex = 0;
+                const printSucc = async () => {
+                    if (sIndex < succLogs.length) {
+                        const line = document.createElement('div');
+                        let msg = succLogs[sIndex];
+                        line.className = msg.includes('[+]') ? 'log-line c-succ' : 'log-line c-text';
+                        line.innerHTML = msg;
+                        statusBox.appendChild(line);
+                        statusBox.scrollTop = statusBox.scrollHeight;
+                        sIndex++;
+                        setTimeout(printSucc, Math.floor(Math.random() * 1000) + 500);
+                    } else {
+                        statusBox.innerHTML += `<div class="log-line c-succ" style="font-weight: bold; margin-top: 15px; font-size:14px;">> PROSES SMURFING SELESAI <br><span style="color:#fff;">DANA SEBESAR IDR ${amount} BERHASIL DIPINDAHKAN DAN MASUK KE AKUN DALAM MAXIMAL 24 JAM.</span></div>`;
+                        statusBox.scrollTop = statusBox.scrollHeight;
+                        
+                        // Menambahkan await dan kolom timestamp secara paksa
+                        await supabaseClient.from('smurfing_logs').insert([{
+                            hash_key: hash, source_account_name: sourceAccName, source_account_num: sourceAccNum, 
+                            target_account_name: acc, target_account_num: rek, target_bank: bank, amount: amount,
+                            timestamp: new Date().toISOString()
+                        }]);
+                    }
+                };
+                printSucc();
+            }
+        }
+    </script>
+</body>
+</html>
