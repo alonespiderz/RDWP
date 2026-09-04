@@ -1,1 +1,384 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Remote Device Wipe Protocol</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Custom styles for a 'hacker' terminal feel */
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+        
+        body {
+            font-family: 'Share Tech Mono', monospace;
+            background-color: #050505;
+            color: #00ff00;
+            overflow-x: hidden;
+        }
+
+        .terminal-container {
+            background: rgba(10, 10, 10, 0.9);
+            border: 1px solid #333;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.1);
+        }
+
+        .terminal-header {
+            background: #111;
+            border-bottom: 1px solid #333;
+        }
+
+        .glitch-text {
+            text-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
+            animation: glitch 1s linear infinite;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #000; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #00ff00; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #00cc00; 
+        }
+
+        /* Scanline effect */
+        .scanlines::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 2;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+
+        .blinking-cursor {
+            font-weight: bold;
+            font-size: 1.2rem;
+            animation: blink 1s step-end infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        .input-glow:focus {
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+            border-color: #00ff00;
+        }
+
+        /* Ensure long words break on mobile */
+        .break-words-custom {
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-2 md:p-4 relative scanlines">
+    
+    <div class="absolute inset-0 z-0 opacity-10 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-green-900 via-black to-black"></div>
+
+    <div class="terminal-container w-full max-w-5xl rounded-lg overflow-hidden flex flex-col z-10 relative shadow-2xl shadow-green-900/20">
+        <!-- Header -->
+        <div class="terminal-header p-3 flex justify-between items-center text-gray-400 text-xs md:text-sm">
+            <div class="flex items-center space-x-2 truncate">
+                <i class="fa-solid fa-mobile-screen-button text-gray-500"></i>
+                <span class="truncate">Universal Remote Device Wipe Protocol v5.0.1</span>
+            </div>
+            <div class="flex space-x-2 shrink-0 ml-2">
+                <div class="w-3 h-3 rounded-full bg-red-600"></div>
+                <div class="w-3 h-3 rounded-full bg-yellow-600"></div>
+                <div class="w-3 h-3 rounded-full bg-green-600"></div>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="flex-1 flex flex-col md:flex-row min-h-[80vh] md:min-h-[700px]">
+            
+            <!-- Left Panel: Input Form -->
+            <div class="w-full md:w-1/3 p-4 md:p-6 border-b md:border-b-0 md:border-r border-gray-800 flex flex-col bg-black/50 overflow-y-auto">
+                <div class="mb-6 md:mb-8 text-center mt-4">
+                    <h2 class="text-xl md:text-2xl font-bold text-white mb-2 glitch-text tracking-widest">SYS_WIPE</h2>
+                    <p class="text-[10px] md:text-xs text-gray-500">UNAUTHORIZED ACCESS DETECTED</p>
+                </div>
+
+                <form id="unlockForm" class="space-y-4 flex-1">
+                    <div>
+                        <label class="block text-[10px] md:text-xs text-gray-400 mb-1">TARGET (PHONE NUMBER OR GMAIL)</label>
+                        <input type="text" id="targetId" class="w-full bg-transparent border border-gray-700 rounded p-2 text-green-500 font-mono text-sm input-glow focus:outline-none transition-all placeholder-gray-600 lowercase" placeholder="+62812xxx / target@email.com" required>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-[10px] md:text-xs text-gray-400 mb-1">ASSOCIATED ACCOUNT (IF KNOWN)</label>
+                        <input type="email" id="appleId" class="w-full bg-transparent border border-gray-700 rounded p-2 text-green-500 font-mono text-sm input-glow focus:outline-none transition-all placeholder-gray-600" placeholder="user@email.com">
+                    </div>
+
+                    <div class="pt-6">
+                        <button type="submit" id="startBtn" class="w-full bg-transparent border-2 border-red-700 text-red-500 hover:bg-red-900/30 hover:border-red-500 font-bold py-3 px-4 rounded transition-all duration-300 flex items-center justify-center space-x-2 text-sm md:text-base">
+                            <i class="fa-solid fa-skull-crossbones"></i>
+                            <span>INITIATE WIPE</span>
+                        </button>
+                    </div>
+                </form>
+
+                <div class="mt-4 md:mt-8 pt-4 border-t border-gray-800 shrink-0">
+                    <div class="flex items-center space-x-2 text-[10px] md:text-xs text-gray-500 mb-2">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        <span>Proxy: <span class="text-green-500">ACTIVE (7 Nodes)</span></span>
+                    </div>
+                    <div class="flex items-center space-x-2 text-[10px] md:text-xs text-gray-500">
+                        <i class="fa-solid fa-server"></i>
+                        <span>Exploit Server: <span class="text-green-500">ONLINE</span></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Terminal Output -->
+            <div class="w-full md:w-2/3 p-3 md:p-5 bg-black flex flex-col font-mono text-[10px] md:text-xs relative flex-1 h-[50vh] md:h-auto">
+                
+                <!-- Watermark -->
+                <div class="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none">
+                    <i class="fa-brands fa-apple text-7xl md:text-9xl"></i>
+                </div>
+
+                <div id="terminalScrollArea" class="flex-1 overflow-y-auto z-10 flex flex-col">
+                    <div id="terminalOutput" class="space-y-1.5 whitespace-pre-wrap break-words-custom pb-2">
+                        <div class="text-gray-500">Establishing secure connection...</div>
+                        <div class="text-gray-500">Connected to relay server [192.168.##.##]</div>
+                        <div class="text-green-500">Ready for target input. Waiting for command...</div>
+                    </div>
+                    
+                    <div class="mt-1 flex items-center text-green-500">
+                        <span class="mr-2">root@override:~#</span>
+                        <span id="currentStatus" class="mr-1 text-gray-300">idle</span>
+                        <span class="blinking-cursor">_</span>
+                    </div>
+
+                    <!-- Progress Bar Container (Hidden by default) -->
+                    <div id="progressContainer" class="hidden mt-4 pb-4 w-full">
+                        <div class="flex justify-between text-[10px] md:text-xs mb-1">
+                            <span id="progressLabel" class="text-yellow-500 truncate mr-2">Injecting Payload...</span>
+                            <span id="progressPercent" class="text-yellow-500 shrink-0">0%</span>
+                        </div>
+                        <div class="w-full bg-gray-800 rounded-full h-1.5 md:h-2">
+                            <div id="progressBar" class="bg-yellow-500 h-1.5 md:h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Success Message Container (Hidden by default) -->
+                    <div id="successMessage" class="hidden mt-4 mb-4 p-3 md:p-4 border border-red-500 bg-red-900/20 rounded text-center animate-pulse">
+                        <i class="fa-solid fa-fire text-2xl md:text-3xl mb-2 text-red-500"></i>
+                        <h3 class="font-bold text-base md:text-lg text-red-500">DEVICE WIPED SUCCESSFULLY</h3>
+                        <p class="text-[10px] md:text-xs text-gray-400 mt-2">Data Status: DESTROYED | Storage: FORMATTED</p>
+                        <p class="text-[10px] md:text-xs mt-1 text-white">Device has been factory reset and data is unrecoverable.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('unlockForm');
+        const targetIdInput = document.getElementById('targetId');
+        const appleIdInput = document.getElementById('appleId');
+        const startBtn = document.getElementById('startBtn');
+        const terminalOutput = document.getElementById('terminalOutput');
+        const currentStatus = document.getElementById('currentStatus');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressBar = document.getElementById('progressBar');
+        const progressLabel = document.getElementById('progressLabel');
+        const progressPercent = document.getElementById('progressPercent');
+        const successMessage = document.getElementById('successMessage');
+        const terminalScrollArea = document.getElementById('terminalScrollArea');
+
+        // FORCE AUTO-SCROLL TO BOTTOM:
+        // Menggunakan MutationObserver memastikan bahwa setiap kali ada elemen DOM baru 
+        // yang ditambahkan ke terminal area, ia akan langsung scroll ke paling bawah.
+        const observer = new MutationObserver(() => {
+            terminalScrollArea.scrollTop = terminalScrollArea.scrollHeight;
+        });
+        observer.observe(terminalScrollArea, { childList: true, subtree: true, attributes: true });
+
+        // Helper to append text to terminal
+        function appendTerminal(text, type = 'info') {
+            const div = document.createElement('div');
+            
+            // Format timestamp
+            const now = new Date();
+            const timeString = `[${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}:${now.getMilliseconds().toString().padStart(3, '0').substring(0,2)}]`;
+            
+            let colorClass = 'text-gray-300';
+            if (type === 'error') colorClass = 'text-red-500';
+            else if (type === 'success') colorClass = 'text-green-400 font-bold';
+            else if (type === 'warning') colorClass = 'text-yellow-500';
+            else if (type === 'system') colorClass = 'text-blue-400';
+            else if (type === 'dim') colorClass = 'text-gray-600 text-[9px] md:text-[10px]'; // For memory hex output
+
+            div.innerHTML = `<span class="text-gray-600 opacity-70">${timeString}</span> <span class="${colorClass}">${text}</span>`;
+            terminalOutput.appendChild(div);
+            
+            // Fallback scroll (in addition to observer)
+            terminalScrollArea.scrollTop = terminalScrollArea.scrollHeight;
+        }
+
+        // Helper to generate random hex strings for the "wiping" effect
+        function generateRandomHex() {
+            const chars = '0123456789ABCDEF';
+            let result = '0x';
+            for (let i = 0; i < 8; i++) result += chars[Math.floor(Math.random() * 16)];
+            return result;
+        }
+
+        // Helper to simulate delay
+        const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+        // Main Execution Logic
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const targetId = targetIdInput.value;
+            const appleId = appleIdInput.value || 'UNKNOWN';
+
+            if(targetId.length < 5) {
+                appendTerminal('ERROR: Invalid Target format. Enter a valid Phone Number or Email.', 'error');
+                return;
+            }
+
+            // Reset UI
+            startBtn.disabled = true;
+            startBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><span>PROCESSING</span>';
+            startBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            targetIdInput.disabled = true;
+            appleIdInput.disabled = true;
+            successMessage.classList.add('hidden');
+            terminalOutput.innerHTML = ''; // Clear previous output
+            
+            appendTerminal(`Initializing remote exploit sequence for target: ${targetId}`, 'system');
+            currentStatus.textContent = "initializing_sequence...";
+            
+            await sleep(1500);
+            
+            // Initial sequence steps (Normal speed)
+            const steps = [
+                { msg: `[INIT] Target identified: ${targetId}`, delay: 1000, type: 'info' },
+                { msg: '[NET] Initializing Tor circuit...', delay: 1500, type: 'info' },
+                { msg: '[NET] Negotiating entry node (RU - 109.100.xx.xx)...', delay: 1000, type: 'info' },
+                { msg: '[NET] Negotiating middle node (NL - 185.220.xx.xx)...', delay: 1000, type: 'info' },
+                { msg: '[NET] Negotiating exit node (CH - 193.180.xx.xx)...', delay: 1000, type: 'info' },
+                { msg: '[NET] Bouncing connection across 7 proxy layers. Masking origin IP.', delay: 1500, type: 'info' },
+                { msg: '[AUTH] Generating fake authentication headers...', delay: 1500, type: 'info' },
+                { msg: '[NET] Establishing SSL/TLS tunnel to Push Notification Server (17.249.xxx.xxx:5223)...', delay: 2000, type: 'warning' },
+                { msg: '[NET] Handshake successful. Cipher: TLS_AES_256_GCM_SHA384.', delay: 1000, type: 'success' },
+                { msg: '[QUERY] Bypassing target carrier NAT and firewall rules...', delay: 2000, type: 'warning' },
+                { msg: `[DATA] Correlation found. Target device is online and reachable.`, delay: 1000, type: 'success' },
+                { msg: '[SCAN] Probing target OS version and baseband firmware...', delay: 2500, type: 'info' },
+                { msg: '[SCAN] Target identified as vulnerable to CVE-2026-X892 (MDM Daemon Heap Overflow).', delay: 2000, type: 'warning' },
+                { msg: '[VULN] Injecting payload into Mobile Device Management (MDM) daemon...', delay: 2000, type: 'warning' },
+                { msg: '[VULN] Privilege escalation successful. Gained root access (UID 0) to daemon.', delay: 1500, type: 'success' },
+                { msg: '[EXPLOIT] Crafting forced "EraseDevice" command payload bypassing user confirmation.', delay: 2000, type: 'info' },
+                { msg: `[SYS] Target state verified. Device is ready for remote data destruction.`, delay: 1500, type: 'warning' }
+            ];
+
+            // Execute preliminary steps
+            for (const step of steps) {
+                await sleep(step.delay);
+                appendTerminal(step.msg, step.type);
+            }
+
+            // --- START PROGESS BAR PHASE (LONG DURATION) ---
+            currentStatus.textContent = "wiping_storage...";
+            progressContainer.classList.remove('hidden');
+            terminalScrollArea.scrollTop = terminalScrollArea.scrollHeight;
+            
+            // Durasinya jauh lebih lama dari versi sebelumnya (bisa memakan waktu 1-2 menit hanya di sini)
+            const progressPhases = [
+                { limit: 10, label: "Injecting remote wipe command payload...", color: "text-red-500", bg: "bg-red-500", speedMin: 500, speedMax: 1000 },
+                { limit: 30, label: "Destroying hardware encryption keys (Secure Enclave)...", color: "text-orange-500", bg: "bg-orange-500", speedMin: 800, speedMax: 1500 },
+                { limit: 55, label: "Formatting /data partition blocks...", color: "text-yellow-500", bg: "bg-yellow-500", speedMin: 600, speedMax: 1200 },
+                { limit: 75, label: "Executing secure 3-pass overwrite (Pass 1 & 2)...", color: "text-purple-500", bg: "bg-purple-500", speedMin: 800, speedMax: 1800 },
+                { limit: 90, label: "Executing secure 3-pass overwrite (Pass 3)...", color: "text-purple-400", bg: "bg-purple-400", speedMin: 1000, speedMax: 2000 },
+                { limit: 100, label: "Clearing NVRAM, Baseband, and triggering kernel panic...", color: "text-green-500", bg: "bg-green-500", speedMin: 1500, speedMax: 2500 }
+            ];
+
+            let currentProgress = 0;
+            
+            for (const phase of progressPhases) {
+                progressLabel.textContent = phase.label;
+                progressLabel.className = `truncate mr-2 ${phase.color}`;
+                progressPercent.className = `shrink-0 ${phase.color}`;
+                progressBar.className = `h-1.5 md:h-2 rounded-full transition-all duration-300 ${phase.bg}`;
+
+                appendTerminal(`[PROCESS] ${phase.label}`, 'info');
+
+                while (currentProgress < phase.limit) {
+                    // Waktu jeda dibuat acak agar terasa natural (lama)
+                    const waitTime = Math.floor(Math.random() * (phase.speedMax - phase.speedMin + 1)) + phase.speedMin;
+                    await sleep(waitTime);
+
+                    // Kadang persentase naik (0 atau 1), membuat seakan-akan 'stuck' atau proses berat
+                    const increment = Math.floor(Math.random() * 2); 
+                    
+                    if (increment === 0) {
+                        // Jika persentase tidak naik, keluarkan output hex untuk efek "sedang bekerja"
+                        let memorySpam = `[OVERWRITE] Block ${generateRandomHex()} -> ${generateRandomHex()} : OK`;
+                        appendTerminal(memorySpam, 'dim');
+                    } else {
+                        currentProgress += increment;
+                        if (currentProgress > phase.limit) currentProgress = phase.limit;
+                        
+                        progressBar.style.width = `${currentProgress}%`;
+                        progressPercent.textContent = `${currentProgress}%`;
+                    }
+                    
+                    // Trigger scroll secara manual lagi (untuk jaga-jaga di mobile)
+                    terminalScrollArea.scrollTop = terminalScrollArea.scrollHeight;
+                }
+            }
+
+            // Finalizing
+            await sleep(2000);
+            progressContainer.classList.add('hidden');
+            currentStatus.textContent = "verifying_destruction...";
+            
+            appendTerminal('[SYS] Device ping lost. Hard reboot successfully initiated by payload.', 'success');
+            await sleep(2500);
+            appendTerminal('[NET] Verifying offline status and connection termination...', 'warning');
+            await sleep(3500);
+            appendTerminal('[NET] Target is entirely offline. Storage verified unrecoverable.', 'success');
+            await sleep(2000);
+            appendTerminal('[CLEANUP] Scrubbing operation logs from proxy nodes (Node 1-7)...', 'info');
+            await sleep(4000);
+            appendTerminal('[CLEANUP] Terminating proxy chain and closing secure tunnel.', 'info');
+            await sleep(2000);
+            
+            currentStatus.textContent = "idle";
+            successMessage.classList.remove('hidden');
+            appendTerminal('OPERATION COMPLETED SUCCESSFULLY. DEVICE FACTORY RESET.', 'success');
+
+            // Re-enable form
+            startBtn.disabled = false;
+            startBtn.innerHTML = '<i class="fa-solid fa-skull-crossbones"></i><span>INITIATE WIPE</span>';
+            startBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            targetIdInput.disabled = false;
+            appleIdInput.disabled = false;
+            targetIdInput.value = '';
+            appleIdInput.value = '';
+            
+            // Scroll final
+            setTimeout(() => { terminalScrollArea.scrollTop = terminalScrollArea.scrollHeight; }, 100);
+        });
+    </script>
+</body>
+</html>
